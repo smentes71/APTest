@@ -1,0 +1,88 @@
+{
+  "Tasks": [
+    {
+      "Id": "d9fd5cd5-cfad-4ac6-a4d8-e58b30ea0ff3",
+      "Name": "test",
+      "DeviceId": "f4780c93c5c24e3fbf820365beb80683",
+      "Command": 2,
+      "ScheduleType": 0,
+      "ExecutionTime": "14:02:00",
+      "ExecutionDate": null,
+      "RepeatDays": [],
+      "CreatedAt": "2025-04-28T12:20:36.712065Z",
+      "Status": 3,
+      "LastExecuted": null,
+      "NextExecution": null
+    },
+    {
+      "Id": "b5bba64f-5704-49fc-998a-5363b4c1d7c4",
+      "Name": "test2",
+      "DeviceId": "3",
+      "Command": 1,
+      "ScheduleType": 1,
+      "ExecutionTime": "15:06:00",
+      "ExecutionDate": null,
+      "RepeatDays": [],
+      "CreatedAt": "2025-04-28T12:21:35.519032Z",
+      "Status": 3,
+      "LastExecuted": null,
+      "NextExecution": "2025-04-28T15:06:00Z"
+    },
+    {
+      "Id": "e784c49e-684d-46f7-8c7a-b9e23907b9b1",
+      "Name": "test2",
+      "DeviceId": "1",
+      "Command": 2,
+      "ScheduleType": 2,
+      "ExecutionTime": "15:05:00",
+      "ExecutionDate": null,
+      "RepeatDays": [],
+      "CreatedAt": "2025-04-28T12:22:26.8440037Z",
+      "Status": 3,
+      "LastExecuted": null,
+      "NextExecution": null
+    },
+    {
+      "Id": "eba79462-59b2-4df9-9b9d-09f7cf5267cc",
+      "Name": "test3",
+      "DeviceId": "f4780c93c5c24e3fbf820365beb80683",
+      "Command": 1,
+      "ScheduleType": 0,
+      "ExecutionTime": "15:49:00",
+      "ExecutionDate": null,
+      "RepeatDays": [],
+      "CreatedAt": "2025-04-28T12:47:32.5123089Z",
+      "Status": 0,
+      "LastExecuted": null,
+      "NextExecution": null
+    },
+    {
+      "Id": "b09e0fd9-2922-4abf-95ea-700a8195220b",
+      "Name": "serdartask",
+      "DeviceId": "f4780c93c5c24e3fbf820365beb80683",
+      "Command": 1,
+      "ScheduleType": 0,
+      "ExecutionTime": "16:03:00",
+      "ExecutionDate": null,
+      "RepeatDays": [],
+      "CreatedAt": "2025-04-28T13:02:23.3079795Z",
+      "Status": 0,
+      "LastExecuted": null,
+      "NextExecution": null
+    },
+    {
+      "Id": "47373644-f23c-471d-a151-f3d734e4e81f",
+      "Name": "PiLivingRoom",
+      "DeviceId": "3",
+      "Command": 0,
+      "ScheduleType": 0,
+      "ExecutionTime": "04:23:00",
+      "ExecutionDate": "2025-04-28T00:00:00",
+      "RepeatDays": [],
+      "CreatedAt": "2025-04-28T13:20:54.499835Z",
+      "Status": 0,
+      "LastExecuted": null,
+      "NextExecution": "2025-04-28T04:23:00"
+    }
+  ]
+}

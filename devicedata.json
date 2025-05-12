@@ -1,0 +1,44 @@
+{
+  "Devices": [
+    {
+      "Id": "1",
+      "Name": "Pi Living Room8877",
+      "IpAddress": "192.168.1.100",
+      "Status": "Offline",
+      "AccessStatus": "Open",
+      "LastUpdate": "2025-04-18T12:14:57.7258267Z",
+      "Group": "mentes",
+      "Location": "serdar"
+    },
+    {
+      "Id": "3",
+      "Name": "Pi Garage7",
+      "IpAddress": "192.168.1.102",
+      "Status": "Offline",
+      "AccessStatus": "Closed",
+      "LastUpdate": "2024-01-17T12:15:00Z",
+      "Group": "Home Automation",
+      "Location": "Building A"
+    },
+    {
+      "Id": "f4780c93c5c24e3fbf820365beb80683",
+      "Name": "HALKALI-SKS-01",
+      "IpAddress": "10.0.207.19",
+      "Status": "Offline",
+      "AccessStatus": "Closed",
+      "LastUpdate": "2025-05-06T10:24:37.3678482Z",
+      "Group": "Home Automation",
+      "Location": "Building A"
+    },
+    {
+      "Id": "8021c86cd8d04415becc611eceb97f80",
+      "Name": "test56565",
+      "IpAddress": "23.192.228.84",
+      "Status": "Offline",
+      "AccessStatus": "Closed",
+      "LastUpdate": "2024-01-17T12:15:00Z",
+      "Group": "Home Automation",
+      "Location": "Building A"
+    }
+  ]
+}

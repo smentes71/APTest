@@ -1,0 +1,115 @@
+﻿@model IEnumerable<RaspberryPi>
+
+@{
+    ViewData["Title"] = "Cihaz Listesi";
+}
+
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-gray-900">Cihaz Listesi</h1>
+        <a href="@Url.Action("Add", "Devices")" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+            <i class="fas fa-plus mr-2"></i>Yeni Cihaz Ekle
+        </a>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cihaz Adı</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP Adresi</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durum</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @foreach (var device in Model)
+                {
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">@device.Name</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-500">@device.IpAddress</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full @(device.Status == PiStatus.Online ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")">
+                                @device.Status
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <button onclick="togglePowerStatus('@device.Id')" class="power-button">
+                                <i class="fas @(device.AccessStatus == AccessStatus.Open ? "fa-plug text-green-600" : "fa-plug text-red-600") text-xl hover:opacity-75 transition-opacity"></i>
+                            </button>
+                            @device.AccessStatus
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <a href="@Url.Action("Edit", "Devices", new { id = device.Id })" class="text-indigo-600 hover:text-indigo-900">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button onclick="deleteDevice('@device.Id')" class="text-red-600 hover:text-red-900">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        async function deleteDevice(id) {
+            if (!confirm('Bu cihazı silmek istediğinizden emin misiniz?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/Devices/Delete/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification(result.message);
+                    location.reload();
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Cihaz silinirken bir hata oluştu', 'error');
+            }
+        }
+
+        async function togglePowerStatus(id) {
+            try {
+                const response = await fetch(`/Devices/TogglePower/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    location.reload();
+                } else {
+                    showNotification('Cihaz durumu değiştirilirken bir hata oluştu', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Cihaz durumu değiştirilirken bir hata oluştu', 'error');
+            }
+        }
+    </script>
+}

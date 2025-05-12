@@ -1,0 +1,29 @@
+@model RaspberryPiControl.Models.RaspberryPi
+
+<div class="pi-card">
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center space-x-3">
+            <i class="fas fa-desktop text-purple-600 text-2xl"></i>
+            <div>
+                <h3 class="font-semibold text-lg">@Model.Name</h3>
+                <p class="text-sm text-gray-500">@Model.IpAddress</p>
+            </div>
+        </div>
+        <span class="px-3 py-1 rounded-full text-sm @(Model.Status == PiStatus.Online ? "pi-status-online" : "pi-status-offline")">
+            @Model.Status
+        </span>
+    </div>
+
+    <div class="flex justify-end space-x-2">
+        <button onclick="sendCommand('@Model.Id', 'Restart')"
+                class="command-button command-button-restart"
+                title="Restart">
+            <i class="fas fa-sync-alt"></i>
+        </button>
+        <button onclick="sendCommand('@Model.Id', 'Shutdown')"
+                class="command-button command-button-shutdown"
+                title="Shutdown">
+            <i class="fas fa-power-off"></i>
+        </button>
+    </div>
+</div>

@@ -1,0 +1,126 @@
+﻿@model IEnumerable<ScheduledTask>
+@{
+    ViewData["Title"] = "Scheduled Tasks";
+
+    string GetStatusStyle(ScheduledTaskStatus status)
+    {
+        return status switch
+        {
+            ScheduledTaskStatus.Scheduled => "bg-blue-100 text-blue-800",
+            ScheduledTaskStatus.Completed => "bg-green-100 text-green-800",
+            ScheduledTaskStatus.Failed => "bg-red-100 text-red-800",
+            ScheduledTaskStatus.Cancelled => "bg-gray-100 text-gray-800",
+            _ => ""
+        };
+    }
+
+    var devices = (IEnumerable<RaspberryPi>)ViewBag.Devices;
+}
+
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-gray-900">Scheduled Tasks</h1>
+        <a href="@Url.Action("Add", "Tasks")" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+            <i class="fas fa-plus mr-2"></i>New Task
+        </a>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Command</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Schedule</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Next Execution</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @foreach (var task in Model)
+                {
+                    var device = devices.FirstOrDefault(d => d.Id == task.DeviceId);
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">@task.Name</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-500">@(device?.Name ?? "Unknown Device")</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-500">@task.Command</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-500">
+                                @task.ScheduleType
+                                @if (task.ScheduleType == ScheduleType.Weekly && task.RepeatDays.Any())
+                                {
+                                    <div class="text-xs text-gray-400">
+                                        @string.Join(", ", task.RepeatDays)
+                                    </div>
+                                }
+                                @if (task.ExecutionTime.HasValue)
+                                {
+                                    <div class="text-xs text-gray-400">
+                                        @task.ExecutionTime.Value.ToString(@"hh\:mm")
+                                    </div>
+                                }
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-500">
+                                @(task.NextExecution?.ToLocalTime().ToString("g") ?? "-")
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full @GetStatusStyle(task.Status)">
+                                @task.Status
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            @if (task.Status == ScheduledTaskStatus.Scheduled)
+                            {
+                                <button onclick="cancelTask('@task.Id')" class="text-red-600 hover:text-red-900">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        async function cancelTask(taskId) {
+            if (!confirm('Are you sure you want to cancel this task?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/Tasks/Cancel/${taskId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification(result.message);
+                    location.reload();
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Failed to cancel task', 'error');
+            }
+        }
+    </script>
+}

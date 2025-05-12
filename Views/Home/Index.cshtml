@@ -1,0 +1,180 @@
+@model IEnumerable<RaspberryPi>
+
+@{
+    ViewData["Title"] = "Raspberry Pi Control Panel";
+}
+
+<div class="space-y-8">
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-gray-900">@ViewData["Title"]</h1>
+        <button onclick="location.reload()"
+                class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+            <i class="fas fa-sync-alt mr-2"></i>
+            Refresh
+        </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @if (Model != null && Model.Any())
+        {
+            @foreach (var pi in Model)
+            {
+                <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-desktop text-purple-600 text-2xl"></i>
+                            <div>
+                                <h3 class="font-semibold text-lg">@pi.Name</h3>
+                                <p class="text-sm text-gray-500">@pi.IpAddress</p>
+                                <p class="text-sm text-gray-500" style="margin-top: 10px;">@pi.Location</p> <!-- Location'? IP'den 10px a?a??ya indirdik -->
+                                <p class="text-sm text-gray-500" >@pi.Group</p> <!-- Group'? Location'dan 10px a?a??ya indirdik -->
+                            </div>
+
+
+
+
+                        </div>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <button onclick="togglePowerStatus('@pi.Id')" class="power-button">
+                                    <i class="fas @(pi.AccessStatus == AccessStatus.Open ? "fa-plug text-green-600" : "fa-plug text-red-600") text-xl hover:opacity-75 transition-opacity"></i>
+                                    @pi.AccessStatus
+                                </button>
+
+                            </td>
+                        </tr>
+                        <span class="px-3 py-1 rounded-full text-sm @(pi.Status == PiStatus.Online ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")">
+                            @pi.Status
+                        </span>
+                    </div>
+
+                    <div class="flex justify-end space-x-2">
+                        <button onclick='sendCommand(@Html.Raw(Json.Serialize(pi.IpAddress)), @Html.Raw(Json.Serialize("on")))'
+                                class="p-2 text-green-600 hover:bg-red-50 rounded-full transition-colors"
+                                title="Open">
+                            <i class="fas fa-power-off"></i>
+                        </button>
+                        <button onclick='sendCommand(@Html.Raw(Json.Serialize(pi.IpAddress)), @Html.Raw(Json.Serialize("off")))'
+                                class="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                                title="Closed">
+                            <i class="fas fa-power-off"></i>
+                        </button>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-span-3 text-center py-8">
+                <p class="text-gray-500">No Raspberry Pi devices found.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        async function sendCommand2(piip, command) {
+            try {
+                alert('Failed to s ' + piip + ' ' + command);
+                alert('Gönderilecek veri: ' + JSON.stringify({ piip, command }));
+                const response = await fetch('/Home/SendCommand2', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ piip, command })
+                });
+                 alert('gonderim sonrasi');
+                const data = await response.json();
+                alert(JSON.stringify(data));
+
+                if (data.success) {
+                    alert('Command sent successfully');
+                    location.reload();
+                } else {
+                    alert(data.message || 'Failed to send command');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to send command');
+            }
+        }
+       
+        async function sendCommand(piip, command) {
+            try {
+                const payload = {
+                    IpAddress: piip,   // Do?ru key ad?
+                    Command: command   // Do?ru key ad?
+                };
+
+                
+
+                alert('Gönderilecek veri: ' + JSON.stringify(payload));
+
+                const response = await fetch('/Home/SendCommand3', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                alert('Sunucudan gelen cevap: ' + JSON.stringify(data));
+
+                if (data.success) {
+                    alert('Komut ba?ar?yla gönderildi');
+                    location.reload();
+                } else {
+                    alert(data.message || 'Komut gönderilemedi');
+                }
+            } catch (error) {
+                console.error('Hata:', error);
+                alert('Komut gönderimi s?ras?nda bir hata olu?tu');
+            }
+        }
+
+
+       /* async function sendSimpleCommand(piip, command) {
+            try {
+                const url = `http://${piip}/${command}`;
+                alert(`?stek gönderiliyor: ${url}`);
+                const response = await fetch(url);
+                const result = await response.text(); // veya response.json() varsa
+                alert(`Cevap: ${result}`);
+            } catch (error) {
+                console.error(error);
+                alert(error);
+                alert('Komut gönderilirken hata olu?tu');
+            }
+        }*/
+
+        function sendSimpleCommand(piip, command) {
+            const url = `http://${piip}/${command}`;
+            alert(`?stek gönderiliyor: ${url}`);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", url, true);
+
+            xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    alert(`Cevap: ${xhr.responseText}`);
+                } else {
+                    alert('Sunucudan beklenmedik bir yan?t al?nd?');
+                }
+            };
+
+            xhr.onerror = function() {
+                console.error('Hata olu?tu: ', xhr.statusText);
+                alert('Komut gönderilirken hata olu?tu');
+            };
+
+            xhr.send();
+        }
+
+
+
+
+    </script>
+}
