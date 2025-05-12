@@ -8,9 +8,6 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
-   
-
-
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -58,6 +55,18 @@
                             <a href="/Tasks/Calendar" class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50">Görev Takvimi</a>
                         </div>
                     </div>
+                    <div class="relative group">
+                        <a href="/Rules" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1">
+                            <i class="fas fa-shield-alt mr-1"></i>
+                            <span>Kurallar</span>
+                        </a>
+                        <div class="absolute z-10 hidden group-hover:block w-48 bg-white shadow-lg rounded-md py-1">
+                            <a href="/Rules" class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50">Kural Listesi</a>
+                            <a href="/Rules/Add" class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50">Yeni Kural Ekle</a>
+                            <a href="/Rules/Logs" class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50">Kural Logları</a>
+                            <a href="/Rules/Settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50">Kural Ayarları</a>
+                        </div>
+                    </div>
                 </div>
                 <!-- Mobile menu button -->
                 <div class="md:hidden">
@@ -78,6 +87,9 @@
                 </a>
                 <a href="/Tasks" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-md">
                     Görevlendirmeler
+                </a>
+                <a href="/Rules" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-md">
+                    Kurallar
                 </a>
             </div>
         </div>
