@@ -8,6 +8,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<IRaspberryPiService, RaspberryPiService>();
 builder.Services.AddHostedService<DeviceStatusService>();
 builder.Services.AddHostedService<TaskSchedulerService>();
+builder.Services.AddSingleton<MongoDbService>();
 
 var app = builder.Build();
 
