@@ -21,22 +21,13 @@ namespace RaspberryPiControl.Services
                     throw new ArgumentException("MongoDB connection string or database name is not configured");
                 }
 
-                var settings = MongoClientSettings.FromConnectionString(connectionString);
-                settings.ServerApi = new ServerApi(ServerApiVersion.V1);
-                settings.ConnectTimeout = TimeSpan.FromSeconds(30);
-                settings.RetryWrites = true;
-
-                var client = new MongoClient(settings);
+                var client = new MongoClient(connectionString);
                 var database = client.GetDatabase(databaseName);
                 _statusHistory = database.GetCollection<DeviceStatusHistory>("DeviceStatusHistory");
-                
-                // Create indexes
-                var indexKeysDefinition = Builders<DeviceStatusHistory>.IndexKeys.Descending(x => x.Timestamp);
-                var indexOptions = new CreateIndexOptions { Name = "TimestampIndex" };
-                var indexModel = new CreateIndexModel<DeviceStatusHistory>(indexKeysDefinition, indexOptions);
-                _statusHistory.Indexes.CreateOne(indexModel);
 
-                _logger.LogInformation("Successfully connected to MongoDB Atlas");
+                // Verify connection
+                database.RunCommand<MongoDB.Bson.BsonDocument>(new MongoDB.Bson.BsonDocument("ping", 1));
+                _logger.LogInformation("Successfully connected to MongoDB");
             }
             catch (Exception ex)
             {
@@ -105,6 +96,19 @@ namespace RaspberryPiControl.Services
             {
                 _logger.LogError(ex, "Failed to get all history");
                 throw;
+            }
+        }
+
+        public async Task<bool> IsConnected()
+        {
+            try
+            {
+                await _statusHistory.Database.RunCommandAsync<MongoDB.Bson.BsonDocument>(new MongoDB.Bson.BsonDocument("ping", 1));
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
     }

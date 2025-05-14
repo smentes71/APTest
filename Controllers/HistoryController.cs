@@ -19,6 +19,12 @@ namespace RaspberryPiControl.Controllers
         {
             try
             {
+                if (!await _mongoDbService.IsConnected())
+                {
+                    TempData["ErrorMessage"] = "Could not connect to the database. Please ensure MongoDB is running.";
+                    return View(Enumerable.Empty<DeviceStatusHistory>());
+                }
+
                 var history = deviceId != null 
                     ? await _mongoDbService.GetDeviceHistoryAsync(deviceId, startDate, endDate)
                     : await _mongoDbService.GetAllHistoryAsync(startDate, endDate);
@@ -38,6 +44,14 @@ namespace RaspberryPiControl.Controllers
         {
             try
             {
+                if (!await _mongoDbService.IsConnected())
+                {
+                    return Json(new { 
+                        success = false, 
+                        error = "Could not connect to MongoDB. Please ensure the service is running."
+                    });
+                }
+
                 var allHistory = await _mongoDbService.GetAllHistoryAsync();
                 return Json(new { 
                     success = true, 
@@ -50,8 +64,8 @@ namespace RaspberryPiControl.Controllers
                 _logger.LogError(ex, "Error retrieving collection data");
                 return Json(new { 
                     success = false, 
-                    error = ex.Message,
-                    details = ex.ToString()
+                    error = "Failed to retrieve collection data",
+                    details = ex.Message
                 });
             }
         }
