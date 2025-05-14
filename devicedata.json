@@ -13,10 +13,10 @@
     {
       "Id": "3",
       "Name": "Pi Garage7",
-      "IpAddress": "192.168.1.102",
-      "Status": "Offline",
+      "IpAddress": "10.0.207.143",
+      "Status": "Online",
       "AccessStatus": "Closed",
-      "LastUpdate": "2024-01-17T12:15:00Z",
+      "LastUpdate": "2025-05-14T12:27:43.8807242Z",
       "Group": "Home Automation",
       "Location": "Building A"
     },
@@ -25,8 +25,8 @@
       "Name": "HALKALI-SKS-01",
       "IpAddress": "10.0.207.19",
       "Status": "Offline",
-      "AccessStatus": "Closed",
-      "LastUpdate": "2025-05-06T10:24:37.3678482Z",
+      "AccessStatus": "",
+      "LastUpdate": "2025-05-14T12:13:30.8842449Z",
       "Group": "Home Automation",
       "Location": "Building A"
     },
