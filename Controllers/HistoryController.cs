@@ -39,12 +39,20 @@ namespace RaspberryPiControl.Controllers
             try
             {
                 var allHistory = await _mongoDbService.GetAllHistoryAsync();
-                return Json(new { success = true, data = allHistory });
+                return Json(new { 
+                    success = true, 
+                    data = allHistory,
+                    count = allHistory.Count()
+                });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving collection data");
-                return Json(new { success = false, error = ex.Message });
+                return Json(new { 
+                    success = false, 
+                    error = ex.Message,
+                    details = ex.ToString()
+                });
             }
         }
     }

@@ -21,7 +21,12 @@ namespace RaspberryPiControl.Services
                     throw new ArgumentException("MongoDB connection string or database name is not configured");
                 }
 
-                var client = new MongoClient(connectionString);
+                var settings = MongoClientSettings.FromConnectionString(connectionString);
+                settings.ServerApi = new ServerApi(ServerApiVersion.V1);
+                settings.ConnectTimeout = TimeSpan.FromSeconds(30);
+                settings.RetryWrites = true;
+
+                var client = new MongoClient(settings);
                 var database = client.GetDatabase(databaseName);
                 _statusHistory = database.GetCollection<DeviceStatusHistory>("DeviceStatusHistory");
                 
@@ -30,6 +35,8 @@ namespace RaspberryPiControl.Services
                 var indexOptions = new CreateIndexOptions { Name = "TimestampIndex" };
                 var indexModel = new CreateIndexModel<DeviceStatusHistory>(indexKeysDefinition, indexOptions);
                 _statusHistory.Indexes.CreateOne(indexModel);
+
+                _logger.LogInformation("Successfully connected to MongoDB Atlas");
             }
             catch (Exception ex)
             {
@@ -87,9 +94,12 @@ namespace RaspberryPiControl.Services
                 if (endDate.HasValue)
                     filter = filter & builder.Lte(x => x.Timestamp, endDate.Value);
 
-                return await _statusHistory.Find(filter)
+                var result = await _statusHistory.Find(filter)
                     .Sort(Builders<DeviceStatusHistory>.Sort.Descending(x => x.Timestamp))
                     .ToListAsync();
+
+                _logger.LogInformation($"Retrieved {result.Count} history records");
+                return result;
             }
             catch (Exception ex)
             {
