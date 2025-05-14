@@ -31,5 +31,20 @@ namespace RaspberryPiControl.Controllers
                 return View(Enumerable.Empty<DeviceStatusHistory>());
             }
         }
+
+        [HttpGet]
+        public async Task<IActionResult> ViewCollection()
+        {
+            try
+            {
+                var allHistory = await _mongoDbService.GetAllHistoryAsync();
+                return Json(allHistory);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving collection data");
+                return Json(new { error = "Failed to retrieve collection data" });
+            }
+        }
     }
 }
