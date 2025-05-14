@@ -7,6 +7,8 @@ namespace RaspberryPiControl.Services
     {
         private readonly IMongoCollection<DeviceStatusHistory> _statusHistory;
         private readonly ILogger<MongoDbService> _logger;
+        private readonly IMongoClient _client;
+        private readonly string _databaseName;
 
         public MongoDbService(IConfiguration configuration, ILogger<MongoDbService> logger)
         {
@@ -14,24 +16,27 @@ namespace RaspberryPiControl.Services
             try
             {
                 var connectionString = configuration.GetValue<string>("MongoDB:ConnectionString");
-                var databaseName = configuration.GetValue<string>("MongoDB:DatabaseName");
+                _databaseName = configuration.GetValue<string>("MongoDB:DatabaseName");
 
-                if (string.IsNullOrEmpty(connectionString) || string.IsNullOrEmpty(databaseName))
+                if (string.IsNullOrEmpty(connectionString) || string.IsNullOrEmpty(_databaseName))
                 {
-                    throw new ArgumentException("MongoDB connection string or database name is not configured");
+                    throw new ArgumentException("MongoDB bağlantı dizesi veya veritabanı adı yapılandırılmamış");
                 }
 
-                var client = new MongoClient(connectionString);
-                var database = client.GetDatabase(databaseName);
+                var settings = MongoClientSettings.FromUrl(new MongoUrl(connectionString));
+                settings.ServerSelectionTimeout = TimeSpan.FromSeconds(5);
+                
+                _client = new MongoClient(settings);
+                var database = _client.GetDatabase(_databaseName);
                 _statusHistory = database.GetCollection<DeviceStatusHistory>("DeviceStatusHistory");
 
-                // Verify connection
+                // Bağlantıyı doğrula
                 database.RunCommand<MongoDB.Bson.BsonDocument>(new MongoDB.Bson.BsonDocument("ping", 1));
-                _logger.LogInformation("Successfully connected to MongoDB");
+                _logger.LogInformation("MongoDB'ye başarıyla bağlanıldı");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to initialize MongoDB connection");
+                _logger.LogError(ex, "MongoDB bağlantısı başlatılamadı");
                 throw;
             }
         }
@@ -41,11 +46,11 @@ namespace RaspberryPiControl.Services
             try
             {
                 await _statusHistory.InsertOneAsync(history);
-                _logger.LogInformation($"Added status history for device {history.DeviceId}");
+                _logger.LogInformation($"{history.DeviceId} cihazı için durum geçmişi eklendi");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Failed to add status history for device {history.DeviceId}");
+                _logger.LogError(ex, $"{history.DeviceId} cihazı için durum geçmişi eklenemedi");
                 throw;
             }
         }
@@ -68,7 +73,7 @@ namespace RaspberryPiControl.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Failed to get history for device {deviceId}");
+                _logger.LogError(ex, $"{deviceId} cihazı için geçmiş alınamadı");
                 throw;
             }
         }
@@ -89,12 +94,12 @@ namespace RaspberryPiControl.Services
                     .Sort(Builders<DeviceStatusHistory>.Sort.Descending(x => x.Timestamp))
                     .ToListAsync();
 
-                _logger.LogInformation($"Retrieved {result.Count} history records");
+                _logger.LogInformation($"{result.Count} adet geçmiş kaydı alındı");
                 return result;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get all history");
+                _logger.LogError(ex, "Tüm geçmiş alınamadı");
                 throw;
             }
         }
@@ -103,11 +108,35 @@ namespace RaspberryPiControl.Services
         {
             try
             {
-                await _statusHistory.Database.RunCommandAsync<MongoDB.Bson.BsonDocument>(new MongoDB.Bson.BsonDocument("ping", 1));
+                await _client.GetDatabase(_databaseName).RunCommandAsync<MongoDB.Bson.BsonDocument>(
+                    new MongoDB.Bson.BsonDocument("ping", 1));
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "MongoDB bağlantı kontrolü başarısız");
+                return false;
+            }
+        }
+
+        public async Task<bool> EnsureCollectionExists()
+        {
+            try
+            {
+                var database = _client.GetDatabase(_databaseName);
+                var collections = await (await database.ListCollectionNamesAsync()).ToListAsync();
+                
+                if (!collections.Contains("DeviceStatusHistory"))
+                {
+                    await database.CreateCollectionAsync("DeviceStatusHistory");
+                    _logger.LogInformation("DeviceStatusHistory koleksiyonu oluşturuldu");
+                }
+                
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Koleksiyon kontrolü başarısız");
                 return false;
             }
         }

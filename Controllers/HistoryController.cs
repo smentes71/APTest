@@ -21,9 +21,11 @@ namespace RaspberryPiControl.Controllers
             {
                 if (!await _mongoDbService.IsConnected())
                 {
-                    TempData["ErrorMessage"] = "Could not connect to the database. Please ensure MongoDB is running.";
+                    TempData["ErrorMessage"] = "Veritabanına bağlanılamadı. Lütfen MongoDB'nin çalıştığından emin olun.";
                     return View(Enumerable.Empty<DeviceStatusHistory>());
                 }
+
+                await _mongoDbService.EnsureCollectionExists();
 
                 var history = deviceId != null 
                     ? await _mongoDbService.GetDeviceHistoryAsync(deviceId, startDate, endDate)
@@ -33,8 +35,8 @@ namespace RaspberryPiControl.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving device history");
-                TempData["ErrorMessage"] = "Failed to retrieve device history. Please try again later.";
+                _logger.LogError(ex, "Cihaz geçmişi alınırken hata oluştu");
+                TempData["ErrorMessage"] = "Cihaz geçmişi alınamadı. Lütfen daha sonra tekrar deneyin.";
                 return View(Enumerable.Empty<DeviceStatusHistory>());
             }
         }
@@ -48,11 +50,13 @@ namespace RaspberryPiControl.Controllers
                 {
                     return Json(new { 
                         success = false, 
-                        error = "Could not connect to MongoDB. Please ensure the service is running."
+                        error = "MongoDB'ye bağlanılamadı. Lütfen servisin çalıştığından emin olun."
                     });
                 }
 
+                await _mongoDbService.EnsureCollectionExists();
                 var allHistory = await _mongoDbService.GetAllHistoryAsync();
+                
                 return Json(new { 
                     success = true, 
                     data = allHistory,
@@ -61,10 +65,10 @@ namespace RaspberryPiControl.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving collection data");
+                _logger.LogError(ex, "Koleksiyon verisi alınırken hata oluştu");
                 return Json(new { 
                     success = false, 
-                    error = "Failed to retrieve collection data",
+                    error = "Koleksiyon verisi alınamadı",
                     details = ex.Message
                 });
             }
