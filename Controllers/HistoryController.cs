@@ -28,6 +28,7 @@ namespace RaspberryPiControl.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving device history");
+                TempData["ErrorMessage"] = "Failed to retrieve device history. Please try again later.";
                 return View(Enumerable.Empty<DeviceStatusHistory>());
             }
         }
@@ -38,12 +39,12 @@ namespace RaspberryPiControl.Controllers
             try
             {
                 var allHistory = await _mongoDbService.GetAllHistoryAsync();
-                return Json(allHistory);
+                return Json(new { success = true, data = allHistory });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving collection data");
-                return Json(new { error = "Failed to retrieve collection data" });
+                return Json(new { success = false, error = ex.Message });
             }
         }
     }
