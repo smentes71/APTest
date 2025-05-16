@@ -1,4 +1,4 @@
-﻿@model RaspberryPi
+@model RaspberryPi
 
 @{
     ViewData["Title"] = "Cihaz Düzenle";
@@ -24,10 +24,15 @@
                 </div>
 
                 <div>
-                    <label asp-for="Status" class="block text-sm font-medium text-gray-700">Durum</label>
-                    <select asp-for="Status" asp-items="Html.GetEnumSelectList<PiStatus>()" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200">
-                    </select>
-                    <span asp-validation-for="Status" class="text-sm text-red-600"></span>
+                    <label asp-for="Group" class="block text-sm font-medium text-gray-700">Grup</label>
+                    <input asp-for="Group" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200" />
+                    <span asp-validation-for="Group" class="text-sm text-red-600"></span>
+                </div>
+
+                <div>
+                    <label asp-for="Location" class="block text-sm font-medium text-gray-700">Konum</label>
+                    <input asp-for="Location" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200" />
+                    <span asp-validation-for="Location" class="text-sm text-red-600"></span>
                 </div>
 
                 <div class="flex justify-end space-x-3 pt-4">
