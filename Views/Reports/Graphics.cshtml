@@ -1,19 +1,19 @@
 @model IEnumerable<DeviceStatusHistory>
 @{
-    ViewData["Title"] = "Status Reports";
+    ViewData["Title"] = "Durum Raporları";
     var devices = (IEnumerable<RaspberryPi>)ViewBag.Devices;
 }
 
 <div class="space-y-6">
     <div class="bg-white shadow-md rounded-lg p-6">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6">Status Reports</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Durum Raporları</h2>
 
         <div class="grid grid-cols-1 gap-4 mb-6">
             <div class="flex space-x-4">
                 <div class="flex-1">
-                    <label class="block text-sm font-medium text-gray-700">Device</label>
+                    <label class="block text-sm font-medium text-gray-700">Cihaz</label>
                     <select id="deviceSelect" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200">
-                        <option value="">All Devices</option>
+                        <option value="">Tüm Cihazlar</option>
                         @foreach (var device in devices)
                         {
                             <option value="@device.Id">@device.Name</option>
@@ -21,16 +21,16 @@
                     </select>
                 </div>
                 <div class="flex-1">
-                    <label class="block text-sm font-medium text-gray-700">Start Date</label>
+                    <label class="block text-sm font-medium text-gray-700">Başlangıç Tarihi</label>
                     <input type="date" id="startDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200" />
                 </div>
                 <div class="flex-1">
-                    <label class="block text-sm font-medium text-gray-700">End Date</label>
+                    <label class="block text-sm font-medium text-gray-700">Bitiş Tarihi</label>
                     <input type="date" id="endDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200" />
                 </div>
                 <div class="flex items-end">
                     <button onclick="updateCharts()" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">
-                        Update
+                        Güncelle
                     </button>
                 </div>
             </div>
@@ -38,11 +38,11 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="bg-white p-4 rounded-lg shadow">
-                <h3 class="text-lg font-semibold mb-4">Online/Offline Status</h3>
+                <h3 class="text-lg font-semibold mb-4">Online/Offline Durumu</h3>
                 <canvas id="statusChart"></canvas>
             </div>
             <div class="bg-white p-4 rounded-lg shadow">
-                <h3 class="text-lg font-semibold mb-4">Open/Close Status</h3>
+                <h3 class="text-lg font-semibold mb-4">Açık/Kapalı Durumu</h3>
                 <canvas id="accessChart"></canvas>
             </div>
         </div>
@@ -50,15 +50,31 @@
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
         let statusChart;
         let accessChart;
 
         function initializeCharts() {
-            const statusCtx = document.getElementById('statusChart').getContext('2d');
-            const accessCtx = document.getElementById('accessChart').getContext('2d');
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            };
 
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
             statusChart = new Chart(statusCtx, {
                 type: 'line',
                 data: {
@@ -68,63 +84,48 @@
                             label: 'Online',
                             data: [],
                             borderColor: 'rgb(34, 197, 94)',
-                            tension: 0.1,
-                            fill: false
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            tension: 0.4,
+                            fill: true
                         },
                         {
                             label: 'Offline',
                             data: [],
                             borderColor: 'rgb(239, 68, 68)',
-                            tension: 0.1,
-                            fill: false
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            tension: 0.4,
+                            fill: true
                         }
                     ]
                 },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            }
-                        }
-                    }
-                }
+                options: commonOptions
             });
 
+            const accessCtx = document.getElementById('accessChart').getContext('2d');
             accessChart = new Chart(accessCtx, {
                 type: 'line',
                 data: {
                     labels: [],
                     datasets: [
                         {
-                            label: 'Open',
+                            label: 'Açık',
                             data: [],
                             borderColor: 'rgb(59, 130, 246)',
-                            tension: 0.1,
-                            fill: false
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true
                         },
                         {
-                            label: 'Closed',
+                            label: 'Kapalı',
                             data: [],
                             borderColor: 'rgb(234, 179, 8)',
-                            tension: 0.1,
-                            fill: false
+                            backgroundColor: 'rgba(234, 179, 8, 0.1)',
+                            tension: 0.4,
+                            fill: true
                         }
                     ]
                 },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            }
-                        }
-                    }
-                }
+                options: commonOptions
             });
         }
 
@@ -135,10 +136,13 @@
 
             try {
                 const response = await fetch(`/Reports/GetChartData?deviceId=${deviceId}&startDate=${startDate}&endDate=${endDate}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 const data = await response.json();
 
                 if (data.error) {
-                    console.error(data.error);
+                    console.error('Server error:', data.error);
                     return;
                 }
 
@@ -153,19 +157,26 @@
                 accessChart.data.datasets[0].data = data.accessData.map(d => d.Open);
                 accessChart.data.datasets[1].data = data.accessData.map(d => d.Closed);
                 accessChart.update();
+
+                console.log('Charts updated with data:', data);
             } catch (error) {
-                console.error('Error fetching chart data:', error);
+                console.error('Error updating charts:', error);
             }
         }
 
+        // Initialize charts when the page loads
         document.addEventListener('DOMContentLoaded', () => {
             initializeCharts();
+            
+            // Set default date range (last 7 days)
             const today = new Date();
-            const lastWeek = new Date();
+            const lastWeek = new Date(today);
             lastWeek.setDate(lastWeek.getDate() - 7);
 
             document.getElementById('startDate').value = lastWeek.toISOString().split('T')[0];
             document.getElementById('endDate').value = today.toISOString().split('T')[0];
+            
+            // Initial chart update
             updateCharts();
         });
     </script>

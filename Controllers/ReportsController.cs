@@ -26,22 +26,12 @@ namespace RaspberryPiControl.Controllers
             {
                 var devices = await _piService.GetAllDevicesAsync();
                 ViewBag.Devices = devices;
-
-                if (!startDate.HasValue)
-                    startDate = DateTime.UtcNow.AddDays(-7);
-                if (!endDate.HasValue)
-                    endDate = DateTime.UtcNow;
-
-                var history = deviceId != null
-                    ? await _mongoDbService.GetDeviceHistoryAsync(deviceId, startDate, endDate)
-                    : await _mongoDbService.GetAllHistoryAsync(startDate, endDate);
-
-                return View(history);
+                return View();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving report data");
-                return View(Enumerable.Empty<DeviceStatusHistory>());
+                return View();
             }
         }
 
@@ -59,24 +49,33 @@ namespace RaspberryPiControl.Controllers
                     ? await _mongoDbService.GetDeviceHistoryAsync(deviceId, startDate, endDate)
                     : await _mongoDbService.GetAllHistoryAsync(startDate, endDate);
 
-                // Generate a complete date range
                 var dateRange = Enumerable.Range(0, (endDate.Value - startDate.Value).Days + 1)
                     .Select(offset => startDate.Value.AddDays(offset).Date)
                     .ToList();
 
-                var statusData = dateRange.Select(date => new
+                var statusData = dateRange.Select(date =>
                 {
-                    Date = date.ToString("yyyy-MM-dd"),
-                    Online = history.Count(h => h.Timestamp.Date == date && h.Status == "Online"),
-                    Offline = history.Count(h => h.Timestamp.Date == date && h.Status == "Offline")
+                    var dayHistory = history.Where(h => h.Timestamp.Date == date);
+                    return new
+                    {
+                        Date = date.ToString("yyyy-MM-dd"),
+                        Online = dayHistory.Count(h => h.Status.ToLower() == "online"),
+                        Offline = dayHistory.Count(h => h.Status.ToLower() == "offline")
+                    };
                 }).ToList();
 
-                var accessData = dateRange.Select(date => new
+                var accessData = dateRange.Select(date =>
                 {
-                    Date = date.ToString("yyyy-MM-dd"),
-                    Open = history.Count(h => h.Timestamp.Date == date && h.AccessStatus == "Open"),
-                    Closed = history.Count(h => h.Timestamp.Date == date && h.AccessStatus == "Closed")
+                    var dayHistory = history.Where(h => h.Timestamp.Date == date);
+                    return new
+                    {
+                        Date = date.ToString("yyyy-MM-dd"),
+                        Open = dayHistory.Count(h => h.AccessStatus.ToLower() == "open"),
+                        Closed = dayHistory.Count(h => h.AccessStatus.ToLower() == "closed")
+                    };
                 }).ToList();
+
+                _logger.LogInformation($"Retrieved {statusData.Count} status records and {accessData.Count} access records");
 
                 return Json(new { statusData, accessData });
             }
