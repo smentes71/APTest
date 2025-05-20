@@ -37,11 +37,11 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-white p-4 rounded-lg shadow">
+            <div class="bg-white p-4 rounded-lg shadow" style="height: 400px;">
                 <h3 class="text-lg font-semibold mb-4">Online/Offline Durumu</h3>
                 <canvas id="statusChart"></canvas>
             </div>
-            <div class="bg-white p-4 rounded-lg shadow">
+            <div class="bg-white p-4 rounded-lg shadow" style="height: 400px;">
                 <h3 class="text-lg font-semibold mb-4">Açık/Kapalı Durumu</h3>
                 <canvas id="accessChart"></canvas>
             </div>
@@ -62,6 +62,10 @@
                 plugins: {
                     legend: {
                         position: 'top',
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
                     }
                 },
                 scales: {
@@ -70,7 +74,18 @@
                         ticks: {
                             stepSize: 1
                         }
+                    },
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
                     }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
                 }
             };
 
@@ -143,8 +158,11 @@
 
                 if (data.error) {
                     console.error('Server error:', data.error);
+                    alert('Grafik verisi alınırken hata oluştu');
                     return;
                 }
+
+                console.log('Received data:', data);
 
                 // Update status chart
                 statusChart.data.labels = data.statusData.map(d => d.Date);
@@ -157,10 +175,9 @@
                 accessChart.data.datasets[0].data = data.accessData.map(d => d.Open);
                 accessChart.data.datasets[1].data = data.accessData.map(d => d.Closed);
                 accessChart.update();
-
-                console.log('Charts updated with data:', data);
             } catch (error) {
                 console.error('Error updating charts:', error);
+                alert('Grafik güncellenirken hata oluştu');
             }
         }
 
