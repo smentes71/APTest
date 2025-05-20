@@ -56,13 +56,13 @@
                         </div>
                     </div>
                     <div class="relative group">
-                        <a href="/Reports" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1">
+                        <a href="/Reports/Graphics" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1">
                             <i class="fas fa-chart-bar mr-1"></i>
                             <span>Raporlar</span>
                         </a>
                         <div class="absolute z-10 hidden group-hover:block w-48 bg-white shadow-lg rounded-md py-1">
                             <a href="/History" class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50">Device History</a>
-                            <a href="/Reports/Graphics" class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50">Graphics</a>
+                            <a href="/Reports/Graphics" class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50">Grafik Raporları</a>
                         </div>
                     </div>
                     <div class="relative group">
@@ -78,7 +78,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- Mobile menu button -->
                 <div class="md:hidden">
                     <button type="button" class="text-gray-700 hover:text-purple-600 focus:outline-none focus:text-purple-600" aria-label="Toggle menu">
                         <i class="fas fa-bars"></i>
@@ -86,7 +85,6 @@
                 </div>
             </div>
         </div>
-        <!-- Mobile menu -->
         <div class="hidden md:hidden">
             <div class="px-2 pt-2 pb-3 space-y-1">
                 <a href="/Devices" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-md">
@@ -98,7 +96,7 @@
                 <a href="/Tasks" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-md">
                     Görevlendirmeler
                 </a>
-                <a href="/Reports" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-md">
+                <a href="/Reports/Graphics" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-md">
                     Raporlar
                 </a>
                 <a href="/Rules" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-md">
@@ -127,7 +125,6 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 
-    <!-- Mobile menu toggle script -->
     <script>
         document.querySelector('button[aria-label="Toggle menu"]').addEventListener('click', function() {
             const mobileMenu = document.querySelector('.md\\:hidden + .hidden');
