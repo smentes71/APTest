@@ -106,7 +106,7 @@ namespace RaspberryPiControl.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(string id, [Bind("Id,Name,IpAddress,Status")] RaspberryPi device)
+        public async Task<IActionResult> Edit(string id, [Bind("Id,Name,IpAddress,Status,Location,Group")] RaspberryPi device)
         {
             if (!ModelState.IsValid)
             {
@@ -134,7 +134,9 @@ namespace RaspberryPiControl.Controllers
 
                 existingDevice.Name = device.Name;
                 existingDevice.IpAddress = device.IpAddress;
-                existingDevice.Status = device.Status.ToString();
+                //existingDevice.Status = device.Status.ToString();
+                existingDevice.Group = device.Group;
+                existingDevice.Location = device.Location;
 
                 string updatedJson = JsonSerializer.Serialize(deviceData, options);
                 await System.IO.File.WriteAllTextAsync(jsonPath, updatedJson);
