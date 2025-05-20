@@ -37,110 +37,80 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-white p-4 rounded-lg shadow" style="height: 400px;">
+            <div class="bg-white p-4 rounded-lg shadow">
                 <h3 class="text-lg font-semibold mb-4">Online/Offline Durumu</h3>
-                <canvas id="statusChart"></canvas>
+                <div style="height: 400px; position: relative;">
+                    <canvas id="statusChart"></canvas>
+                </div>
             </div>
-            <div class="bg-white p-4 rounded-lg shadow" style="height: 400px;">
+            <div class="bg-white p-4 rounded-lg shadow">
                 <h3 class="text-lg font-semibold mb-4">Açık/Kapalı Durumu</h3>
-                <canvas id="accessChart"></canvas>
+                <div style="height: 400px; position: relative;">
+                    <canvas id="accessChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        let statusChart;
-        let accessChart;
+        let statusChart = null;
+        let accessChart = null;
 
-        function initializeCharts() {
-            const commonOptions = {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false
-                    }
+        function destroyCharts() {
+            if (statusChart) {
+                statusChart.destroy();
+                statusChart = null;
+            }
+            if (accessChart) {
+                accessChart.destroy();
+                accessChart = null;
+            }
+        }
+
+        function createChart(ctx, type) {
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: type === 'status' ? 'Online' : 'Açık',
+                            data: [],
+                            borderColor: type === 'status' ? 'rgb(34, 197, 94)' : 'rgb(59, 130, 246)',
+                            backgroundColor: type === 'status' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: type === 'status' ? 'Offline' : 'Kapalı',
+                            data: [],
+                            borderColor: type === 'status' ? 'rgb(239, 68, 68)' : 'rgb(234, 179, 8)',
+                            backgroundColor: type === 'status' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(234, 179, 8, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
                         }
                     },
-                    x: {
-                        ticks: {
-                            maxRotation: 45,
-                            minRotation: 45
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
                         }
                     }
-                },
-                interaction: {
-                    mode: 'nearest',
-                    axis: 'x',
-                    intersect: false
                 }
-            };
-
-            const statusCtx = document.getElementById('statusChart').getContext('2d');
-            statusChart = new Chart(statusCtx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [
-                        {
-                            label: 'Online',
-                            data: [],
-                            borderColor: 'rgb(34, 197, 94)',
-                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        },
-                        {
-                            label: 'Offline',
-                            data: [],
-                            borderColor: 'rgb(239, 68, 68)',
-                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        }
-                    ]
-                },
-                options: commonOptions
-            });
-
-            const accessCtx = document.getElementById('accessChart').getContext('2d');
-            accessChart = new Chart(accessCtx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [
-                        {
-                            label: 'Açık',
-                            data: [],
-                            borderColor: 'rgb(59, 130, 246)',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        },
-                        {
-                            label: 'Kapalı',
-                            data: [],
-                            borderColor: 'rgb(234, 179, 8)',
-                            backgroundColor: 'rgba(234, 179, 8, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        }
-                    ]
-                },
-                options: commonOptions
             });
         }
 
@@ -151,49 +121,50 @@
 
             try {
                 const response = await fetch(`/Reports/GetChartData?deviceId=${deviceId}&startDate=${startDate}&endDate=${endDate}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
                 const data = await response.json();
 
                 if (data.error) {
                     console.error('Server error:', data.error);
-                    alert('Grafik verisi alınırken hata oluştu');
                     return;
                 }
 
-                console.log('Received data:', data);
+                console.log('Chart data:', data);
 
-                // Update status chart
+                destroyCharts();
+
+                const statusCtx = document.getElementById('statusChart').getContext('2d');
+                statusChart = createChart(statusCtx, 'status');
                 statusChart.data.labels = data.statusData.map(d => d.Date);
                 statusChart.data.datasets[0].data = data.statusData.map(d => d.Online);
                 statusChart.data.datasets[1].data = data.statusData.map(d => d.Offline);
                 statusChart.update();
 
-                // Update access chart
+                const accessCtx = document.getElementById('accessChart').getContext('2d');
+                accessChart = createChart(accessCtx, 'access');
                 accessChart.data.labels = data.accessData.map(d => d.Date);
                 accessChart.data.datasets[0].data = data.accessData.map(d => d.Open);
                 accessChart.data.datasets[1].data = data.accessData.map(d => d.Closed);
                 accessChart.update();
+
             } catch (error) {
                 console.error('Error updating charts:', error);
-                alert('Grafik güncellenirken hata oluştu');
             }
         }
 
-        // Initialize charts when the page loads
         document.addEventListener('DOMContentLoaded', () => {
-            initializeCharts();
-            
-            // Set default date range (last 7 days)
             const today = new Date();
             const lastWeek = new Date(today);
             lastWeek.setDate(lastWeek.getDate() - 7);
 
             document.getElementById('startDate').value = lastWeek.toISOString().split('T')[0];
             document.getElementById('endDate').value = today.toISOString().split('T')[0];
+
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            const accessCtx = document.getElementById('accessChart').getContext('2d');
             
-            // Initial chart update
+            statusChart = createChart(statusCtx, 'status');
+            accessChart = createChart(accessCtx, 'access');
+
             updateCharts();
         });
     </script>
