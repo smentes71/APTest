@@ -8,6 +8,7 @@
     "start": "dotnet run"
   },
   "dependencies": {
-    "mongodb": "^6.3.0"
+    "mongodb": "^6.3.0",
+    "chart.js": "^4.4.1"
   }
 }

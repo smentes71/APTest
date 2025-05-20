@@ -1,0 +1,187 @@
+@model IEnumerable<DeviceStatusHistory>
+@{
+    ViewData["Title"] = "Status Reports";
+    var devices = (IEnumerable<RaspberryPi>)ViewBag.Devices;
+}
+
+<div class="space-y-6">
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Status Reports</h2>
+
+        <div class="grid grid-cols-1 gap-4 mb-6">
+            <div class="flex space-x-4">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700">Device</label>
+                    <select id="deviceSelect" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200">
+                        <option value="">All Devices</option>
+                        @foreach (var device in devices)
+                        {
+                            <option value="@device.Id">@device.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700">Start Date</label>
+                    <input type="date" id="startDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200" />
+                </div>
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700">End Date</label>
+                    <input type="date" id="endDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200" />
+                </div>
+                <div class="flex items-end">
+                    <button onclick="updateCharts()" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">
+                        Update
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4">Online/Offline Status</h3>
+                <canvas id="statusChart"></canvas>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4">Open/Close Status</h3>
+                <canvas id="accessChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let statusChart;
+        let accessChart;
+
+        function initializeCharts() {
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            const accessCtx = document.getElementById('accessChart').getContext('2d');
+
+            statusChart = new Chart(statusCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Online',
+                            data: [],
+                            borderColor: 'rgb(34, 197, 94)',
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Offline',
+                            data: [],
+                            borderColor: 'rgb(239, 68, 68)',
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            accessChart = new Chart(accessCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Open',
+                            data: [],
+                            borderColor: 'rgb(59, 130, 246)',
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Closed',
+                            data: [],
+                            borderColor: 'rgb(234, 179, 8)',
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        async function updateCharts() {
+            const deviceId = document.getElementById('deviceSelect').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            try {
+                const response = await fetch(`/Reports/GetChartData?deviceId=${deviceId}&startDate=${startDate}&endDate=${endDate}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    console.error(data.error);
+                    return;
+                }
+
+                updateStatusChart(data.statusData);
+                updateAccessChart(data.accessData);
+            } catch (error) {
+                console.error('Error fetching chart data:', error);
+            }
+        }
+
+        function updateStatusChart(data) {
+            const dates = [...new Set(data.map(d => d.Date))].sort();
+            const onlineData = dates.map(date => {
+                const entry = data.find(d => d.Date === date && d.Status === 'Online');
+                return entry ? entry.Count : 0;
+            });
+            const offlineData = dates.map(date => {
+                const entry = data.find(d => d.Date === date && d.Status === 'Offline');
+                return entry ? entry.Count : 0;
+            });
+
+            statusChart.data.labels = dates.map(d => new Date(d).toLocaleDateString());
+            statusChart.data.datasets[0].data = onlineData;
+            statusChart.data.datasets[1].data = offlineData;
+            statusChart.update();
+        }
+
+        function updateAccessChart(data) {
+            const dates = [...new Set(data.map(d => d.Date))].sort();
+            const openData = dates.map(date => {
+                const entry = data.find(d => d.Date === date && d.Status === 'Open');
+                return entry ? entry.Count : 0;
+            });
+            const closedData = dates.map(date => {
+                const entry = data.find(d => d.Date === date && d.Status === 'Closed');
+                return entry ? entry.Count : 0;
+            });
+
+            accessChart.data.labels = dates.map(d => new Date(d).toLocaleDateString());
+            accessChart.data.datasets[0].data = openData;
+            accessChart.data.datasets[1].data = closedData;
+            accessChart.update();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeCharts();
+            const today = new Date();
+            const lastWeek = new Date();
+            lastWeek.setDate(lastWeek.getDate() - 7);
+
+            document.getElementById('startDate').value = lastWeek.toISOString().split('T')[0];
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+            updateCharts();
+        });
+    </script>
+}
