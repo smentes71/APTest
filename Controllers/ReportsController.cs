@@ -59,27 +59,24 @@ namespace RaspberryPiControl.Controllers
                     ? await _mongoDbService.GetDeviceHistoryAsync(deviceId, startDate, endDate)
                     : await _mongoDbService.GetAllHistoryAsync(startDate, endDate);
 
-                var statusData = history
-                    .GroupBy(h => new { Date = h.Timestamp.Date, h.Status })
-                    .Select(g => new
-                    {
-                        Date = g.Key.Date,
-                        Status = g.Key.Status,
-                        Count = g.Count()
-                    })
-                    .OrderBy(x => x.Date)
+                // Generate a complete date range
+                var dateRange = Enumerable.Range(0, (endDate.Value - startDate.Value).Days + 1)
+                    .Select(offset => startDate.Value.AddDays(offset).Date)
                     .ToList();
 
-                var accessData = history
-                    .GroupBy(h => new { Date = h.Timestamp.Date, h.AccessStatus })
-                    .Select(g => new
-                    {
-                        Date = g.Key.Date,
-                        Status = g.Key.AccessStatus,
-                        Count = g.Count()
-                    })
-                    .OrderBy(x => x.Date)
-                    .ToList();
+                var statusData = dateRange.Select(date => new
+                {
+                    Date = date.ToString("yyyy-MM-dd"),
+                    Online = history.Count(h => h.Timestamp.Date == date && h.Status == "Online"),
+                    Offline = history.Count(h => h.Timestamp.Date == date && h.Status == "Offline")
+                }).ToList();
+
+                var accessData = dateRange.Select(date => new
+                {
+                    Date = date.ToString("yyyy-MM-dd"),
+                    Open = history.Count(h => h.Timestamp.Date == date && h.AccessStatus == "Open"),
+                    Closed = history.Count(h => h.Timestamp.Date == date && h.AccessStatus == "Closed")
+                }).ToList();
 
                 return Json(new { statusData, accessData });
             }

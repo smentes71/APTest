@@ -68,13 +68,15 @@
                             label: 'Online',
                             data: [],
                             borderColor: 'rgb(34, 197, 94)',
-                            tension: 0.1
+                            tension: 0.1,
+                            fill: false
                         },
                         {
                             label: 'Offline',
                             data: [],
                             borderColor: 'rgb(239, 68, 68)',
-                            tension: 0.1
+                            tension: 0.1,
+                            fill: false
                         }
                     ]
                 },
@@ -82,7 +84,10 @@
                     responsive: true,
                     scales: {
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
                         }
                     }
                 }
@@ -97,13 +102,15 @@
                             label: 'Open',
                             data: [],
                             borderColor: 'rgb(59, 130, 246)',
-                            tension: 0.1
+                            tension: 0.1,
+                            fill: false
                         },
                         {
                             label: 'Closed',
                             data: [],
                             borderColor: 'rgb(234, 179, 8)',
-                            tension: 0.1
+                            tension: 0.1,
+                            fill: false
                         }
                     ]
                 },
@@ -111,7 +118,10 @@
                     responsive: true,
                     scales: {
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
                         }
                     }
                 }
@@ -132,45 +142,20 @@
                     return;
                 }
 
-                updateStatusChart(data.statusData);
-                updateAccessChart(data.accessData);
+                // Update status chart
+                statusChart.data.labels = data.statusData.map(d => d.Date);
+                statusChart.data.datasets[0].data = data.statusData.map(d => d.Online);
+                statusChart.data.datasets[1].data = data.statusData.map(d => d.Offline);
+                statusChart.update();
+
+                // Update access chart
+                accessChart.data.labels = data.accessData.map(d => d.Date);
+                accessChart.data.datasets[0].data = data.accessData.map(d => d.Open);
+                accessChart.data.datasets[1].data = data.accessData.map(d => d.Closed);
+                accessChart.update();
             } catch (error) {
                 console.error('Error fetching chart data:', error);
             }
-        }
-
-        function updateStatusChart(data) {
-            const dates = [...new Set(data.map(d => d.Date))].sort();
-            const onlineData = dates.map(date => {
-                const entry = data.find(d => d.Date === date && d.Status === 'Online');
-                return entry ? entry.Count : 0;
-            });
-            const offlineData = dates.map(date => {
-                const entry = data.find(d => d.Date === date && d.Status === 'Offline');
-                return entry ? entry.Count : 0;
-            });
-
-            statusChart.data.labels = dates.map(d => new Date(d).toLocaleDateString());
-            statusChart.data.datasets[0].data = onlineData;
-            statusChart.data.datasets[1].data = offlineData;
-            statusChart.update();
-        }
-
-        function updateAccessChart(data) {
-            const dates = [...new Set(data.map(d => d.Date))].sort();
-            const openData = dates.map(date => {
-                const entry = data.find(d => d.Date === date && d.Status === 'Open');
-                return entry ? entry.Count : 0;
-            });
-            const closedData = dates.map(date => {
-                const entry = data.find(d => d.Date === date && d.Status === 'Closed');
-                return entry ? entry.Count : 0;
-            });
-
-            accessChart.data.labels = dates.map(d => new Date(d).toLocaleDateString());
-            accessChart.data.datasets[0].data = openData;
-            accessChart.data.datasets[1].data = closedData;
-            accessChart.update();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
