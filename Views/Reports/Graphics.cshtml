@@ -54,7 +54,7 @@
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
         let statusChart = null;
         let accessChart = null;
@@ -134,16 +134,16 @@
 
                 const statusCtx = document.getElementById('statusChart').getContext('2d');
                 statusChart = createChart(statusCtx, 'status');
-                statusChart.data.labels = data.statusData.map(d => d.Date);
-                statusChart.data.datasets[0].data = data.statusData.map(d => d.Online);
-                statusChart.data.datasets[1].data = data.statusData.map(d => d.Offline);
+                statusChart.data.labels = data.statusData.map(d => d.date);
+                statusChart.data.datasets[0].data = data.statusData.map(d => d.online);
+                statusChart.data.datasets[1].data = data.statusData.map(d => d.offline);
                 statusChart.update();
 
                 const accessCtx = document.getElementById('accessChart').getContext('2d');
                 accessChart = createChart(accessCtx, 'access');
-                accessChart.data.labels = data.accessData.map(d => d.Date);
-                accessChart.data.datasets[0].data = data.accessData.map(d => d.Open);
-                accessChart.data.datasets[1].data = data.accessData.map(d => d.Closed);
+                accessChart.data.labels = data.accessData.map(d => d.date);
+                accessChart.data.datasets[0].data = data.accessData.map(d => d.open);
+                accessChart.data.datasets[1].data = data.accessData.map(d => d.closed);
                 accessChart.update();
 
             } catch (error) {
@@ -151,7 +151,7 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             const today = new Date();
             const lastWeek = new Date(today);
             lastWeek.setDate(lastWeek.getDate() - 7);
@@ -159,13 +159,7 @@
             document.getElementById('startDate').value = lastWeek.toISOString().split('T')[0];
             document.getElementById('endDate').value = today.toISOString().split('T')[0];
 
-            const statusCtx = document.getElementById('statusChart').getContext('2d');
-            const accessCtx = document.getElementById('accessChart').getContext('2d');
-            
-            statusChart = createChart(statusCtx, 'status');
-            accessChart = createChart(accessCtx, 'access');
-
-            updateCharts();
+            await updateCharts();
         });
     </script>
 }
