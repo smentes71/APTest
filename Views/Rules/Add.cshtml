@@ -7,7 +7,7 @@
     <div class="bg-white shadow-md rounded-lg p-6">
         <h2 class="text-2xl font-bold text-gray-900 mb-6">Add New Rule</h2>
 
-        <form asp-action="Add" method="post">
+        <form asp-action="Add" method="post" id="ruleForm">
             <div class="space-y-4">
                 <div>
                     <label asp-for="Name" class="block text-sm font-medium text-gray-700">Rule Name</label>
@@ -30,29 +30,33 @@
                 <div>
                     <label asp-for="Command" class="block text-sm font-medium text-gray-700">Command</label>
                     <select asp-for="Command" asp-items="Html.GetEnumSelectList<CommandType>()" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200">
+                        <option value="">Select Command</option>
                     </select>
                     <span asp-validation-for="Command" class="text-sm text-red-600"></span>
                 </div>
 
                 <div>
                     <label asp-for="TriggerType" class="block text-sm font-medium text-gray-700">Trigger Type</label>
-                    <select asp-for="TriggerType" asp-items="Html.GetEnumSelectList<TriggerType>()"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200"
-                            onchange="toggleTriggerOptions(this.value)">
+                    <select asp-for="TriggerType" id="triggerType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200">
+                        <option value="">Select Trigger Type</option>
+                        <option value="IpAddress">IP Address</option>
+                        <option value="Api">API</option>
                     </select>
                     <span asp-validation-for="TriggerType" class="text-sm text-red-600"></span>
                 </div>
 
-                <div id="ipAddressDiv" style="display: none;">
-                    <label asp-for="IpAddress" class="block text-sm font-medium text-gray-700">IP Address</label>
-                    <input asp-for="IpAddress" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200" placeholder="192.168.1.100" />
-                    <span asp-validation-for="IpAddress" class="text-sm text-red-600"></span>
-                </div>
+                <div id="triggerDetails" class="hidden space-y-4">
+                    <div id="ipAddressField" class="hidden">
+                        <label asp-for="IpAddress" class="block text-sm font-medium text-gray-700">IP Address</label>
+                        <input asp-for="IpAddress" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200" placeholder="192.168.1.100" />
+                        <span asp-validation-for="IpAddress" class="text-sm text-red-600"></span>
+                    </div>
 
-                <div id="apiUrlDiv" style="display: none;">
-                    <label asp-for="ApiUrl" class="block text-sm font-medium text-gray-700">API URL</label>
-                    <input asp-for="ApiUrl" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200" placeholder="https://api.example.com/endpoint" />
-                    <span asp-validation-for="ApiUrl" class="text-sm text-red-600"></span>
+                    <div id="apiUrlField" class="hidden">
+                        <label asp-for="ApiUrl" class="block text-sm font-medium text-gray-700">API URL</label>
+                        <input asp-for="ApiUrl" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200" placeholder="https://api.example.com/endpoint" />
+                        <span asp-validation-for="ApiUrl" class="text-sm text-red-600"></span>
+                    </div>
                 </div>
 
                 <div class="flex justify-end space-x-3 pt-4">
@@ -69,30 +73,37 @@
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
-        function toggleTriggerOptions(triggerType) {
-            const ipAddressDiv = document.getElementById('ipAddressDiv');
-            const apiUrlDiv = document.getElementById('apiUrlDiv');
-
-            switch (triggerType) {
+        document.getElementById('triggerType').addEventListener('change', function() {
+            const triggerDetails = document.getElementById('triggerDetails');
+            const ipAddressField = document.getElementById('ipAddressField');
+            const apiUrlField = document.getElementById('apiUrlField');
+            
+            triggerDetails.classList.remove('hidden');
+            
+            switch(this.value) {
                 case 'IpAddress':
-                    ipAddressDiv.style.display = 'block';
-                    apiUrlDiv.style.display = 'none';
+                    ipAddressField.classList.remove('hidden');
+                    apiUrlField.classList.add('hidden');
                     break;
                 case 'Api':
-                    ipAddressDiv.style.display = 'none';
-                    apiUrlDiv.style.display = 'block';
+                    ipAddressField.classList.add('hidden');
+                    apiUrlField.classList.remove('hidden');
                     break;
+                default:
+                    triggerDetails.classList.add('hidden');
+                    ipAddressField.classList.add('hidden');
+                    apiUrlField.classList.add('hidden');
             }
-        }
+        });
 
-        // Initialize the form based on the initial trigger type
+        // Initialize form state if there's a pre-selected value
         document.addEventListener('DOMContentLoaded', function() {
-            const triggerType = document.getElementById('TriggerType').value;
-            toggleTriggerOptions(triggerType);
+            const triggerType = document.getElementById('triggerType');
+            if (triggerType.value) {
+                triggerType.dispatchEvent(new Event('change'));
+            }
         });
     </script>
 }

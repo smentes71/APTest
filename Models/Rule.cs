@@ -6,19 +6,19 @@ namespace RaspberryPiControl.Models
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
 
-        [Required]
+        [Required(ErrorMessage = "Rule name is required")]
         [Display(Name = "Rule Name")]
         public string Name { get; set; } = string.Empty;
 
-        [Required]
+        [Required(ErrorMessage = "Device selection is required")]
         [Display(Name = "Device")]
         public string DeviceId { get; set; } = string.Empty;
 
-        [Required]
+        [Required(ErrorMessage = "Command is required")]
         [Display(Name = "Command")]
         public CommandType Command { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Trigger type is required")]
         [Display(Name = "Trigger Type")]
         public TriggerType TriggerType { get; set; }
 
