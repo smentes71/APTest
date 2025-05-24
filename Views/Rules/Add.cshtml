@@ -1,0 +1,98 @@
+@model Rule
+@{
+    ViewData["Title"] = "Add New Rule";
+}
+
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Add New Rule</h2>
+
+        <form asp-action="Add" method="post">
+            <div class="space-y-4">
+                <div>
+                    <label asp-for="Name" class="block text-sm font-medium text-gray-700">Rule Name</label>
+                    <input asp-for="Name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200" />
+                    <span asp-validation-for="Name" class="text-sm text-red-600"></span>
+                </div>
+
+                <div>
+                    <label asp-for="DeviceId" class="block text-sm font-medium text-gray-700">Device</label>
+                    <select asp-for="DeviceId" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200">
+                        <option value="">Select Device</option>
+                        @foreach (var device in ViewBag.Devices)
+                        {
+                            <option value="@device.Id">@device.Name (@device.IpAddress)</option>
+                        }
+                    </select>
+                    <span asp-validation-for="DeviceId" class="text-sm text-red-600"></span>
+                </div>
+
+                <div>
+                    <label asp-for="Command" class="block text-sm font-medium text-gray-700">Command</label>
+                    <select asp-for="Command" asp-items="Html.GetEnumSelectList<CommandType>()" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200">
+                    </select>
+                    <span asp-validation-for="Command" class="text-sm text-red-600"></span>
+                </div>
+
+                <div>
+                    <label asp-for="TriggerType" class="block text-sm font-medium text-gray-700">Trigger Type</label>
+                    <select asp-for="TriggerType" asp-items="Html.GetEnumSelectList<TriggerType>()"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200"
+                            onchange="toggleTriggerOptions(this.value)">
+                    </select>
+                    <span asp-validation-for="TriggerType" class="text-sm text-red-600"></span>
+                </div>
+
+                <div id="ipAddressDiv" style="display: none;">
+                    <label asp-for="IpAddress" class="block text-sm font-medium text-gray-700">IP Address</label>
+                    <input asp-for="IpAddress" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200" placeholder="192.168.1.100" />
+                    <span asp-validation-for="IpAddress" class="text-sm text-red-600"></span>
+                </div>
+
+                <div id="apiUrlDiv" style="display: none;">
+                    <label asp-for="ApiUrl" class="block text-sm font-medium text-gray-700">API URL</label>
+                    <input asp-for="ApiUrl" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200" placeholder="https://api.example.com/endpoint" />
+                    <span asp-validation-for="ApiUrl" class="text-sm text-red-600"></span>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4">
+                    <a href="@Url.Action("Index", "Rules")" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                        Save
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        function toggleTriggerOptions(triggerType) {
+            const ipAddressDiv = document.getElementById('ipAddressDiv');
+            const apiUrlDiv = document.getElementById('apiUrlDiv');
+
+            switch (triggerType) {
+                case 'IpAddress':
+                    ipAddressDiv.style.display = 'block';
+                    apiUrlDiv.style.display = 'none';
+                    break;
+                case 'Api':
+                    ipAddressDiv.style.display = 'none';
+                    apiUrlDiv.style.display = 'block';
+                    break;
+            }
+        }
+
+        // Initialize the form based on the initial trigger type
+        document.addEventListener('DOMContentLoaded', function() {
+            const triggerType = document.getElementById('TriggerType').value;
+            toggleTriggerOptions(triggerType);
+        });
+    </script>
+}
