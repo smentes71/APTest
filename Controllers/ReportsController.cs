@@ -44,6 +44,8 @@ namespace RaspberryPiControl.Controllers
                     startDate = DateTime.UtcNow.AddDays(-7);
                 if (!endDate.HasValue)
                     endDate = DateTime.UtcNow;
+                else
+                    endDate = endDate.Value.Date.AddDays(1).AddTicks(-1); // günü 23:59:59.9999999 yapar
 
                 var history = deviceId != null
                     ? await _mongoDbService.GetDeviceHistoryAsync(deviceId, startDate, endDate)
@@ -60,19 +62,19 @@ namespace RaspberryPiControl.Controllers
                     var dayHistory = history.Where(h => h.Timestamp.Date == date);
                     var onlineDevices = dayHistory.Where(h => h.Status.ToLower() == "online")
                         .Select(h => new { name = h.DeviceName, ipAddress = h.IpAddress, location = h.Location, group = h.Group })
-                        .Distinct()
+                        
                         .ToList();
                     var offlineDevices = dayHistory.Where(h => h.Status.ToLower() == "offline")
                         .Select(h => new { name = h.DeviceName, ipAddress = h.IpAddress, location = h.Location, group = h.Group })
-                        .Distinct()
+                        
                         .ToList();
                     var openDevices = dayHistory.Where(h => h.AccessStatus?.ToLower() == "open")
                         .Select(h => new { name = h.DeviceName, ipAddress = h.IpAddress, location = h.Location, group = h.Group })
-                        .Distinct()
+                        
                         .ToList();
                     var closedDevices = dayHistory.Where(h => h.AccessStatus?.ToLower() == "closed")
                         .Select(h => new { name = h.DeviceName, ipAddress = h.IpAddress, location = h.Location, group = h.Group })
-                        .Distinct()
+                        
                         .ToList();
 
                     return new
