@@ -51,47 +51,57 @@ namespace RaspberryPiControl.Controllers
 
                 history = history.OrderBy(h => h.Timestamp).ToList();
 
-                var statusChanges = history.GroupBy(h => new { 
-                    Date = h.Timestamp.Date,
-                    Status = h.Status.ToLower()
-                })
-                .Select(g => new {
-                    g.Key.Date,
-                    g.Key.Status,
-                    Count = g.Count()
-                })
-                .ToList();
-
-                var accessChanges = history.GroupBy(h => new {
-                    Date = h.Timestamp.Date,
-                    AccessStatus = (h.AccessStatus ?? "").ToLower()
-                })
-                .Select(g => new {
-                    g.Key.Date,
-                    g.Key.AccessStatus,
-                    Count = g.Count()
-                })
-                .ToList();
-
                 var dateRange = Enumerable.Range(0, (endDate.Value - startDate.Value).Days + 1)
                     .Select(offset => startDate.Value.AddDays(offset).Date)
                     .ToList();
 
-                var statusData = dateRange.Select(date => new {
-                    Date = date.ToString("dd/MM/yyyy"),
-                    Online = statusChanges.FirstOrDefault(s => s.Date == date && s.Status == "online")?.Count ?? 0,
-                    Offline = statusChanges.FirstOrDefault(s => s.Date == date && s.Status == "offline")?.Count ?? 0
+                var result = dateRange.Select(date =>
+                {
+                    var dayHistory = history.Where(h => h.Timestamp.Date == date);
+                    var onlineDevices = dayHistory.Where(h => h.Status.ToLower() == "online")
+                        .Select(h => new { name = h.DeviceName, ipAddress = h.IpAddress, location = h.Location, group = h.Group })
+                        .Distinct()
+                        .ToList();
+                    var offlineDevices = dayHistory.Where(h => h.Status.ToLower() == "offline")
+                        .Select(h => new { name = h.DeviceName, ipAddress = h.IpAddress, location = h.Location, group = h.Group })
+                        .Distinct()
+                        .ToList();
+                    var openDevices = dayHistory.Where(h => h.AccessStatus?.ToLower() == "open")
+                        .Select(h => new { name = h.DeviceName, ipAddress = h.IpAddress, location = h.Location, group = h.Group })
+                        .Distinct()
+                        .ToList();
+                    var closedDevices = dayHistory.Where(h => h.AccessStatus?.ToLower() == "closed")
+                        .Select(h => new { name = h.DeviceName, ipAddress = h.IpAddress, location = h.Location, group = h.Group })
+                        .Distinct()
+                        .ToList();
+
+                    return new
+                    {
+                        date = date.ToString("dd/MM/yyyy"),
+                        online = onlineDevices.Count,
+                        offline = offlineDevices.Count,
+                        devices = new
+                        {
+                            online = onlineDevices,
+                            offline = offlineDevices,
+                            open = openDevices,
+                            closed = closedDevices
+                        }
+                    };
                 }).ToList();
 
-                var accessData = dateRange.Select(date => new {
-                    Date = date.ToString("dd/MM/yyyy"),
-                    Open = accessChanges.FirstOrDefault(a => a.Date == date && a.AccessStatus == "open")?.Count ?? 0,
-                    Closed = accessChanges.FirstOrDefault(a => a.Date == date && a.AccessStatus == "closed")?.Count ?? 0
+                var accessData = dateRange.Select(date =>
+                {
+                    var dayHistory = history.Where(h => h.Timestamp.Date == date);
+                    return new
+                    {
+                        date = date.ToString("dd/MM/yyyy"),
+                        open = dayHistory.Count(h => h.AccessStatus?.ToLower() == "open"),
+                        closed = dayHistory.Count(h => h.AccessStatus?.ToLower() == "closed")
+                    };
                 }).ToList();
 
-                _logger.LogInformation($"Retrieved chart data: Status changes: {statusChanges.Count}, Access changes: {accessChanges.Count}");
-
-                return Json(new { statusData, accessData });
+                return Json(new { statusData = result, accessData });
             }
             catch (Exception ex)
             {

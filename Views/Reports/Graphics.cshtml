@@ -51,6 +51,32 @@
             </div>
         </div>
     </div>
+
+    <!-- Device List Modal -->
+    <div id="deviceListModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold" id="modalTitle">Cihaz Listesi</h3>
+                <button onclick="closeDeviceList()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="max-h-96 overflow-y-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cihaz Adı</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP Adresi</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Konum</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Grup</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deviceListBody" class="bg-white divide-y divide-gray-200">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
@@ -58,6 +84,7 @@
     <script>
         let statusChart = null;
         let accessChart = null;
+        let chartData = null;
 
         function destroyCharts() {
             if (statusChart) {
@@ -70,15 +97,46 @@
             }
         }
 
-        function createChart(ctx, type) {
+        function showDeviceList(date, type, value) {
+            const modal = document.getElementById('deviceListModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const deviceListBody = document.getElementById('deviceListBody');
+            
+            modalTitle.textContent = `${date} - ${type} (${value} cihaz)`;
+            deviceListBody.innerHTML = '';
+
+            // Find the matching data point
+            const dateData = chartData.find(d => d.date === date);
+            if (dateData && dateData.devices && dateData.devices[type.toLowerCase()]) {
+                const devices = dateData.devices[type.toLowerCase()];
+                devices.forEach(device => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${device.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${device.ipAddress}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${device.location || '-'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${device.group || '-'}</td>
+                    `;
+                    deviceListBody.appendChild(row);
+                });
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeDeviceList() {
+            document.getElementById('deviceListModal').classList.add('hidden');
+        }
+
+        function createChart(ctx, type, data) {
             return new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: [],
+                    labels: data.map(d => d.date),
                     datasets: [
                         {
                             label: type === 'status' ? 'Online' : 'Açık',
-                            data: [],
+                            data: type === 'status' ? data.map(d => d.online) : data.map(d => d.open),
                             borderColor: type === 'status' ? 'rgb(34, 197, 94)' : 'rgb(59, 130, 246)',
                             backgroundColor: type === 'status' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(59, 130, 246, 0.1)',
                             tension: 0.4,
@@ -86,7 +144,7 @@
                         },
                         {
                             label: type === 'status' ? 'Offline' : 'Kapalı',
-                            data: [],
+                            data: type === 'status' ? data.map(d => d.offline) : data.map(d => d.closed),
                             borderColor: type === 'status' ? 'rgb(239, 68, 68)' : 'rgb(234, 179, 8)',
                             backgroundColor: type === 'status' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(234, 179, 8, 0.1)',
                             tension: 0.4,
@@ -109,6 +167,15 @@
                                 stepSize: 1
                             }
                         }
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const dataIndex = elements[0].index;
+                            const date = data[dataIndex].date;
+                            const datasetLabel = elements[0].element.$context.dataset.label;
+                            const value = elements[0].element.$context.raw;
+                            showDeviceList(date, datasetLabel, value);
+                        }
                     }
                 }
             });
@@ -128,23 +195,14 @@
                     return;
                 }
 
-                console.log('Chart data:', data);
-
+                chartData = data.statusData;
                 destroyCharts();
 
                 const statusCtx = document.getElementById('statusChart').getContext('2d');
-                statusChart = createChart(statusCtx, 'status');
-                statusChart.data.labels = data.statusData.map(d => d.date);
-                statusChart.data.datasets[0].data = data.statusData.map(d => d.online);
-                statusChart.data.datasets[1].data = data.statusData.map(d => d.offline);
-                statusChart.update();
+                statusChart = createChart(statusCtx, 'status', data.statusData);
 
                 const accessCtx = document.getElementById('accessChart').getContext('2d');
-                accessChart = createChart(accessCtx, 'access');
-                accessChart.data.labels = data.accessData.map(d => d.date);
-                accessChart.data.datasets[0].data = data.accessData.map(d => d.open);
-                accessChart.data.datasets[1].data = data.accessData.map(d => d.closed);
-                accessChart.update();
+                accessChart = createChart(accessCtx, 'access', data.accessData);
 
             } catch (error) {
                 console.error('Error updating charts:', error);
