@@ -135,7 +135,7 @@
                     labels: data.map(d => d.date),
                     datasets: [
                         {
-                            label: type === 'status' ? 'Online' : 'Açık',
+                            label: type === 'status' ? 'Online' : 'Open',
                             data: type === 'status' ? data.map(d => d.online) : data.map(d => d.open),
                             borderColor: type === 'status' ? 'rgb(34, 197, 94)' : 'rgb(59, 130, 246)',
                             backgroundColor: type === 'status' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(59, 130, 246, 0.1)',
@@ -143,7 +143,7 @@
                             fill: true
                         },
                         {
-                            label: type === 'status' ? 'Offline' : 'Kapalı',
+                            label: type === 'status' ? 'Offline' : 'Closed',
                             data: type === 'status' ? data.map(d => d.offline) : data.map(d => d.closed),
                             borderColor: type === 'status' ? 'rgb(239, 68, 68)' : 'rgb(234, 179, 8)',
                             backgroundColor: type === 'status' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(234, 179, 8, 0.1)',
