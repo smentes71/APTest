@@ -7,11 +7,16 @@ namespace RaspberryPiControl.Controllers
     public class HistoryController : Controller
     {
         private readonly MongoDbService _mongoDbService;
+        private readonly IRaspberryPiService _piService;
         private readonly ILogger<HistoryController> _logger;
 
-        public HistoryController(MongoDbService mongoDbService, ILogger<HistoryController> logger)
+        public HistoryController(
+            MongoDbService mongoDbService, 
+            IRaspberryPiService piService,
+            ILogger<HistoryController> logger)
         {
             _mongoDbService = mongoDbService;
+            _piService = piService;
             _logger = logger;
         }
 
@@ -35,6 +40,14 @@ namespace RaspberryPiControl.Controllers
 
                 await _mongoDbService.EnsureCollectionExists();
 
+                // Get all devices to populate location and group filters
+                var devices = await _piService.GetAllDevicesAsync();
+                var locations = devices.Select(d => d.Location).Where(l => !string.IsNullOrEmpty(l)).Distinct().OrderBy(l => l);
+                var groups = devices.Select(d => d.Group).Where(g => !string.IsNullOrEmpty(g)).Distinct().OrderBy(g => g);
+
+                ViewBag.Locations = locations;
+                ViewBag.Groups = groups;
+
                 var history = await _mongoDbService.GetAllHistoryAsync(startDate, endDate);
 
                 // Apply filters
@@ -56,11 +69,11 @@ namespace RaspberryPiControl.Controllers
                 }
                 if (!string.IsNullOrWhiteSpace(location))
                 {
-                    history = history.Where(h => h.Location.Contains(location, StringComparison.OrdinalIgnoreCase));
+                    history = history.Where(h => h.Location.Equals(location, StringComparison.OrdinalIgnoreCase));
                 }
                 if (!string.IsNullOrWhiteSpace(group))
                 {
-                    history = history.Where(h => h.Group.Contains(group, StringComparison.OrdinalIgnoreCase));
+                    history = history.Where(h => h.Group.Equals(group, StringComparison.OrdinalIgnoreCase));
                 }
 
                 return View(history);
